@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flip 7 Scorecard</title>
+<style>
+:root{--bg:#0f1420;--card:#1a2233;--line:#2a3550;--txt:#eef2fa;--mut:#8b98b5;--acc:#ffcc33;--good:#3ddc97;--bad:#ff5c6c;--blue:#4da3ff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:16px 14px 90px;max-width:640px;margin-inline:auto}
+h1{font-size:26px;margin:4px 0 2px;letter-spacing:.5px}h1 b{color:var(--acc)}
+.sub{color:var(--mut);font-size:13px;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:14px}
+.row{display:flex;gap:8px;align-items:center}
+input[type=text],input[type=number]{flex:1;background:#0d1320;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:11px 12px;font-size:16px;min-width:0}
+button{background:var(--line);color:var(--txt);border:0;border-radius:10px;padding:11px 14px;font-size:15px;font-weight:600;cursor:pointer}
+button.pri{background:var(--acc);color:#1a1300}button.ghost{background:transparent;border:1px solid var(--line)}
+button.danger{background:transparent;border:1px solid var(--bad);color:var(--bad)}
+button:disabled{opacity:.4}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{background:#0d1320;border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:14px;display:flex;gap:6px;align-items:center}
+.chip span{color:var(--bad);cursor:pointer;font-weight:700}
+.hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.hdr h2{font-size:17px;margin:0}.target{color:var(--mut);font-size:13px}
+.pl{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:10px 4px;border-top:1px solid var(--line)}
+.pl:first-of-type{border-top:0}
+.name{font-weight:600}.name small{display:block;color:var(--mut);font-weight:400;font-size:12px}
+.bar{height:5px;background:#0d1320;border-radius:3px;margin-top:5px;overflow:hidden}.bar i{display:block;height:100%;background:var(--blue)}
+.lead .bar i{background:var(--acc)}.lead .name::after{content:" 👑"}
+.tot{font-size:22px;font-weight:800;min-width:48px;text-align:right}
+.rs{min-width:74px;text-align:center;border-radius:10px;padding:9px 6px;font-weight:700;background:#0d1320;border:1px dashed var(--line);color:var(--mut);cursor:pointer}
+.rs.set{border-style:solid;color:var(--txt);border-color:var(--blue)}
+.rs.bust{border-color:var(--bad);color:var(--bad)}.rs.f7{border-color:var(--good);color:var(--good)}
+.actions{display:flex;gap:8px;margin-top:12px}.actions button{flex:1}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:7px 6px;text-align:center;border-bottom:1px solid var(--line)}
+th{color:var(--mut);font-weight:600;font-size:12px}td:first-child,th:first-child{text-align:left;color:var(--mut)}
+td.b{color:var(--bad)}td.f{color:var(--good)}tfoot td{font-weight:800;color:var(--txt);border:0}
+.scroll{overflow-x:auto}
+.win{background:linear-gradient(135deg,#3a2f00,#1a2233);border-color:var(--acc);text-align:center}
+.win h2{margin:4px 0;color:var(--acc)}
+/* modal */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:flex-end;justify-content:center;z-index:9}
+.ov.on{display:flex}
+.sheet{background:var(--card);width:100%;max-width:640px;border-radius:18px 18px 0 0;padding:16px 14px calc(16px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}
+.sheet h3{margin:0 0 2px}.lbl{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.8px;margin:12px 0 6px}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.grid.m{grid-template-columns:repeat(6,1fr)}
+.k{padding:12px 0;border-radius:10px;background:#0d1320;border:1px solid var(--line);font-weight:700;font-size:16px;text-align:center;cursor:pointer;user-select:none}
+.k.on{background:var(--blue);border-color:var(--blue);color:#001}
+.k.mod.on{background:var(--acc);border-color:var(--acc);color:#1a1300}
+.preview{display:flex;justify-content:space-between;align-items:center;background:#0d1320;border-radius:12px;padding:12px;margin-top:14px}
+.preview .big{font-size:30px;font-weight:800}.preview small{color:var(--mut);font-size:12px;display:block}
+.f7tag{color:var(--good);font-weight:700}
+.seg{display:flex;background:#0d1320;border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px;margin-bottom:6px}
+.seg button{flex:1;padding:7px 4px;font-size:13px;background:transparent;color:var(--mut)}
+.seg button.on{background:var(--line);color:var(--txt)}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.presets button{padding:8px 12px;font-size:14px}.presets button.on{background:var(--acc);color:#1a1300}
+#hist tbody td:not(:first-child){cursor:pointer}#hist tbody td:not(:first-child):active{background:var(--line)}
+.tgtBtn{background:transparent;border:1px solid var(--line);color:var(--mut);font-size:13px;padding:5px 10px}
+.hint{color:var(--mut);font-size:12px;margin-top:6px}
+.rules{font-size:13px;color:var(--mut)}.rules summary{cursor:pointer;color:var(--txt);font-weight:600}
+.rules ul{padding-left:18px;margin:8px 0 0}
+</style>
+</head>
+<body>
+<h1>FLIP <b>7</b> Scorecard</h1>
+<div class="sub">Tap a player's round box to score their hand. First to the target at the end of a round wins.</div>
+
+<div id="setup" class="card">
+  <div class="row"><input id="pname" type="text" placeholder="Add player" maxlength="16"><button id="addBtn">Add</button></div>
+  <div class="chips" id="chips"></div>
+  <div class="lbl" style="color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.8px;margin:14px 0 0">Target score</div>
+  <div class="presets" id="presets"></div>
+  <div class="row" style="margin-top:8px"><input id="target" type="number" inputmode="numeric" value="200" min="10" step="10" placeholder="Custom" style="max-width:120px"><span style="color:var(--mut);font-size:13px">points</span></div>
+  <button class="pri" id="startBtn" style="width:100%;margin-top:14px">Start game</button>
+</div>
+
+<div id="game" style="display:none">
+  <div id="winBox"></div>
+  <div class="card">
+    <div class="hdr"><h2 id="roundTitle">Round 1</h2><button class="tgtBtn" id="tgtLbl"></button></div>
+    <div class="seg" id="sortSeg"><button data-s="seat">Seat order</button><button data-s="score">Score</button><button data-s="alpha">A–Z</button></div>
+    <div id="players"></div>
+    <div class="actions"><button class="ghost" id="undoBtn">Undo round</button><button class="pri" id="commitBtn">Finish round</button></div>
+  </div>
+  <div class="card" id="histCard" style="display:none">
+    <div class="hdr"><h2>History</h2></div>
+    <div class="scroll"><table id="hist"></table></div>
+    <div class="hint">Tap any score to edit it.</div>
+  </div>
+  <div class="actions"><button class="ghost" id="rematchBtn">Rematch (same players)</button><button class="danger" id="newBtn">New game</button></div>
+</div>
+
+<div class="card rules" style="margin-top:14px"><details><summary>Scoring rules</summary><ul>
+<li>Add up your number cards (0–12).</li>
+<li><b>×2</b> doubles your number cards only, applied before modifiers.</li>
+<li>Add <b>+2 to +10</b> modifier cards.</li>
+<li><b>Flip 7</b> (7 different number cards) = +15 bonus and ends the round.</li>
+<li><b>Bust</b> (duplicate number) = 0 for the round. Second Chance / Freeze / Flip Three score nothing.</li>
+</ul></details></div>
+
+<div class="ov" id="ov"><div class="sheet">
+  <div class="hdr"><div><h3 id="mTitle">Score</h3><div class="hint" id="mSub" style="margin:0"></div></div><button class="ghost" id="mClose" style="padding:6px 12px">✕</button></div>
+  <div class="lbl">Number cards</div>
+  <div class="grid" id="nums"></div>
+  <div class="lbl">Modifiers</div>
+  <div class="grid m" id="mods"></div>
+  <div class="lbl">Or type a total</div>
+  <div class="row"><input id="manual" type="number" inputmode="numeric" placeholder="e.g. 34"></div>
+  <div class="preview"><div><small id="pvBreak">No cards</small><span class="big" id="pvTot">0</span></div><div id="pvTag"></div></div>
+  <div class="actions"><button class="danger" id="bustBtn">Bust (0)</button><button class="pri" id="saveBtn">Save</button></div>
+</div></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const MODS=[['x2','×2'],[2,'+2'],[4,'+4'],[6,'+6'],[8,'+8'],[10,'+10']];
+const PRESETS=[100,150,200,250,300];
+let S={players:[],target:200,rounds:[],cur:{},started:false,sort:'seat'};
+// cur[playerIndex] = {score, bust, f7}
+function save(){try{localStorage.setItem('flip7',JSON.stringify(S))}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem('flip7'));if(d&&d.players)S=d}catch(e){}}
+
+function totals(){return S.players.map((_,i)=>S.rounds.reduce((a,r)=>a+(r[i]?r[i].score:0),0))}
+function winner(){
+  if(!S.rounds.length)return null;
+  const t=totals(),max=Math.max(...t);
+  if(max<S.target)return null;
+  const w=t.map((v,i)=>v===max?i:-1).filter(i=>i>=0);
+  return {idx:w,score:max};
+}
+
+function renderSetup(){
+  $('chips').innerHTML=S.players.map((p,i)=>`<div class="chip">${esc(p)}<span data-i="${i}">×</span></div>`).join('');
+  $('chips').querySelectorAll('span').forEach(s=>s.onclick=()=>{S.players.splice(+s.dataset.i,1);save();renderSetup()});
+  $('startBtn').disabled=S.players.length<2;
+  $('startBtn').textContent=S.players.length<2?'Add at least 2 players':`Start game — first to ${S.target}`;
+  $('presets').innerHTML=PRESETS.map(p=>`<button class="${S.target===p?'on':''}" data-p="${p}">${p}</button>`).join('');
+  $('presets').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.target=+b.dataset.p;$('target').value=S.target;save();renderSetup()});
+}
+$('target').oninput=()=>{const v=parseInt($('target').value);if(v>=10){S.target=v;save();renderSetup()}};
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+function render(){
+  $('setup').style.display=S.started?'none':'block';
+  $('game').style.display=S.started?'block':'none';
+  if(!S.started){renderSetup();return}
+  const t=totals(),max=Math.max(...t),w=winner();
+  $('roundTitle').textContent=w?'Game over':`Round ${S.rounds.length+1}`;
+  $('tgtLbl').textContent=`Target ${S.target} ✎`;
+  S.sort=S.sort||'seat';
+  $('sortSeg').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.s===S.sort));
+  const order=S.players.map((_,i)=>i);
+  if(S.sort==='score')order.sort((a,b)=>t[b]-t[a]||S.players[a].localeCompare(S.players[b]));
+  if(S.sort==='alpha')order.sort((a,b)=>S.players[a].localeCompare(S.players[b],undefined,{sensitivity:'base'}));
+  $('players').innerHTML=order.map(i=>{const p=S.players[i];
+    const c=S.cur[i];let cls='rs',txt='Score';
+    if(c){cls+=' set';txt=c.bust?'Bust':c.score;if(c.bust)cls+=' bust';else if(c.f7)cls+=' f7'}
+    const lead=max>0&&t[i]===max;
+    return `<div class="pl ${lead?'lead':''}"><div class="name">${esc(p)}<small>${Math.max(0,S.target-t[i])} to go</small><div class="bar"><i style="width:${Math.min(100,t[i]/S.target*100)}%"></i></div></div>
+    <div class="tot">${t[i]}</div>${w?'':`<div class="${cls}" data-i="${i}">${txt}</div>`}</div>`}).join('');
+  $('players').querySelectorAll('.rs').forEach(b=>b.onclick=()=>openM(+b.dataset.i));
+  $('commitBtn').style.display=w?'none':'';
+  $('commitBtn').disabled=Object.keys(S.cur).length!==S.players.length;
+  $('commitBtn').textContent=Object.keys(S.cur).length===S.players.length?'Finish round':`Finish round (${Object.keys(S.cur).length}/${S.players.length})`;
+  $('undoBtn').disabled=!S.rounds.length;
+  $('winBox').innerHTML=w?`<div class="card win"><div style="font-size:34px">🏆</div><h2>${w.idx.map(i=>esc(S.players[i])).join(' & ')} win${w.idx.length>1?'':'s'}!</h2><div>${w.score} points in ${S.rounds.length} rounds</div></div>`:'';
+  // history
+  $('histCard').style.display=S.rounds.length?'block':'none';
+  if(S.rounds.length){
+    let h='<thead><tr><th>Rd</th>'+S.players.map(p=>`<th>${esc(p)}</th>`).join('')+'</tr></thead><tbody>';
+    S.rounds.forEach((r,ri)=>{h+=`<tr><td>${ri+1}</td>`+S.players.map((_,i)=>{const c=r[i]||{score:0};return `<td class="${c.bust?'b':c.f7?'f':''}" data-r="${ri}" data-i="${i}">${c.bust?'✗':c.score}${c.f7?'★':''}</td>`}).join('')+'</tr>'});
+    h+='</tbody><tfoot><tr><td>Total</td>'+t.map(v=>`<td>${v}</td>`).join('')+'</tr></tfoot>';
+    $('hist').innerHTML=h;
+    $('hist').querySelectorAll('td[data-r]').forEach(td=>td.onclick=()=>openM(+td.dataset.i,+td.dataset.r));
+  }
+}
+
+// ---- modal calculator
+let mi=null,mr=null,sel=new Set(),mods=new Set(); // mr = round index when editing history, null for current round
+$('nums').innerHTML=Array.from({length:13},(_,n)=>`<div class="k" data-n="${n}">${n}</div>`).join('');
+$('mods').innerHTML=MODS.map(([v,l])=>`<div class="k mod" data-m="${v}">${l}</div>`).join('');
+$('nums').querySelectorAll('.k').forEach(k=>k.onclick=()=>{const n=+k.dataset.n;
+  if(sel.has(n))sel.delete(n);else{if(sel.size>=7)return;sel.add(n)}$('manual').value='';calc()});
+$('mods').querySelectorAll('.k').forEach(k=>k.onclick=()=>{const m=k.dataset.m;mods.has(m)?mods.delete(m):mods.add(m);$('manual').value='';calc()});
+$('manual').oninput=()=>{sel.clear();mods.clear();calc()};
+function calc(){
+  document.querySelectorAll('#nums .k').forEach(k=>k.classList.toggle('on',sel.has(+k.dataset.n)));
+  document.querySelectorAll('#mods .k').forEach(k=>k.classList.toggle('on',mods.has(k.dataset.m)));
+  const man=$('manual').value;
+  if(man!==''){const v=Math.max(0,parseInt(man)||0);$('pvTot').textContent=v;$('pvBreak').textContent='Manual entry';$('pvTag').innerHTML='';return {score:v,f7:false}}
+  let num=[...sel].reduce((a,b)=>a+b,0),dbl=mods.has('x2'),add=[...mods].filter(m=>m!=='x2').reduce((a,b)=>a+ +b,0),f7=sel.size===7;
+  const score=(dbl?num*2:num)+add+(f7?15:0);
+  const parts=[];if(sel.size)parts.push(`${num}${dbl?' ×2':''}`);if(add)parts.push(`+${add}`);if(f7)parts.push('+15');
+  $('pvBreak').textContent=parts.length?parts.join(' '):'No cards';
+  $('pvTot').textContent=score;
+  $('pvTag').innerHTML=f7?'<span class="f7tag">FLIP 7! ★</span>':`<small style="color:var(--mut)">${sel.size}/7 cards</small>`;
+  return {score,f7};
+}
+function openM(i,r=null){mi=i;mr=r;sel.clear();mods.clear();$('manual').value='';
+  const c=r===null?S.cur[i]:S.rounds[r][i];
+  if(c&&c.cards){c.cards.forEach(n=>sel.add(n));(c.mods||[]).forEach(m=>mods.add(m))}else if(c&&!c.bust)$('manual').value=c.score;
+  $('mTitle').textContent=S.players[i];
+  $('mSub').textContent=r===null?`Round ${S.rounds.length+1}`:`Editing round ${r+1}`;
+  calc();$('ov').classList.add('on')}
+function closeM(){$('ov').classList.remove('on');mi=null;mr=null}
+function put(v){if(mr===null)S.cur[mi]=v;else S.rounds[mr][mi]=v;save();closeM();render()}
+$('mClose').onclick=closeM;$('ov').onclick=e=>{if(e.target.id==='ov')closeM()};
+$('saveBtn').onclick=()=>{const r=calc();const man=$('manual').value!=='';
+  put({score:r.score,f7:r.f7,bust:false,cards:man?null:[...sel],mods:man?null:[...mods]})};
+$('bustBtn').onclick=()=>put({score:0,bust:true,f7:false});
+$('sortSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.sort=b.dataset.s;save();render()});
+// target editor (in-game) — reuses modal-free inline prompt
+$('tgtLbl').onclick=()=>{const h=$('tgtLbl');if(h.querySelector('input'))return;
+  h.innerHTML=`<input type="number" inputmode="numeric" value="${S.target}" style="width:80px;padding:4px 6px;font-size:14px">`;
+  const inp=h.querySelector('input');inp.focus();inp.select();
+  const done=()=>{const v=parseInt(inp.value);if(v>=10)S.target=v;save();render()};
+  inp.onblur=done;inp.onkeydown=e=>{if(e.key==='Enter')inp.blur()};inp.onclick=e=>e.stopPropagation()};
+
+// ---- controls
+function addP(){const v=$('pname').value.trim();if(!v)return;S.players.push(v);$('pname').value='';save();renderSetup();$('pname').focus()}
+$('addBtn').onclick=addP;$('pname').onkeydown=e=>{if(e.key==='Enter')addP()};
+$('startBtn').onclick=()=>{S.target=Math.max(10,parseInt($('target').value)||200);S.started=true;S.rounds=[];S.cur={};save();render()};
+$('commitBtn').onclick=()=>{S.rounds.push(S.players.map((_,i)=>({...S.cur[i]})));S.cur={};save();render();window.scrollTo({top:0,behavior:'smooth'})};
+$('undoBtn').onclick=()=>{if(!S.rounds.length)return;S.rounds.pop();S.cur={};save();render()};
+$('rematchBtn').onclick=()=>{S.rounds=[];S.cur={};save();render()};
+let armed=false;$('newBtn').onclick=()=>{if(!armed){armed=true;$('newBtn').textContent='Tap again to confirm';setTimeout(()=>{armed=false;$('newBtn').textContent='New game'},2500);return}
+  S.started=false;S.rounds=[];S.cur={};armed=false;$('newBtn').textContent='New game';save();render()};
+
+load();$('target').value=S.target;render();
+</script>
+</body>
+</html>
